@@ -1,0 +1,229 @@
+2026-03-28 02:49:55,329 | INFO | ingest | Reading and cleaning PDF: c:\Users\Chars\AppData\Roaming\Cursor\User\workspaceStorage\353102621f8acf2440669663e164abc2\pdfs\c4d52795-b268-49d8-b60b-cf0aa164f31d\AI Training Document (1).pdf
+2026-03-28 02:49:56,062 | INFO | ingest | Chunking document
+2026-03-28 02:49:56,066 | INFO | ingest | Total chunks created: 41
+2026-03-28 02:49:56,068 | INFO | ingest | Embedding chunks in batches
+2026-03-28 02:49:57,037 | INFO | ingest | Persisting FAISS index to C:\Users\Chars\AndroidStudioProjects\Qlite\legal_rag_chatbot\data\processed\faiss_store
+2026-03-28 02:49:57,044 | INFO | ingest | Ingestion complete. Stored chunks: 41
+2026-03-28 02:51:04,844 | INFO | rag_pipeline | Retrieved 6 chunks
+2026-03-28 02:51:06,901 | ERROR | rag_pipeline | LLM streaming failed: [WinError 10061] No connection could be made because the target machine actively refused it
+Traceback (most recent call last):
+  File "C:\Users\Chars\AndroidStudioProjects\Qlite\legal_rag_chatbot\.venv\Lib\site-packages\httpx\_transports\default.py", line 101, in map_httpcore_exceptions
+    yield
+  File "C:\Users\Chars\AndroidStudioProjects\Qlite\legal_rag_chatbot\.venv\Lib\site-packages\httpx\_transports\default.py", line 250, in handle_request
+    resp = self._pool.handle_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Chars\AndroidStudioProjects\Qlite\legal_rag_chatbot\.venv\Lib\site-packages\httpcore\_sync\connection_pool.py", line 256, in handle_request
+    raise exc from None
+  File "C:\Users\Chars\AndroidStudioProjects\Qlite\legal_rag_chatbot\.venv\Lib\site-packages\httpcore\_sync\connection_pool.py", line 236, in handle_request
+    response = connection.handle_request(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Chars\AndroidStudioProjects\Qlite\legal_rag_chatbot\.venv\Lib\site-packages\httpcore\_sync\connection.py", line 101, in handle_request
+    raise exc
+  File "C:\Users\Chars\AndroidStudioProjects\Qlite\legal_rag_chatbot\.venv\Lib\site-packages\httpcore\_sync\connection.py", line 78, in handle_request
+    stream = self._connect(request)
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Chars\AndroidStudioProjects\Qlite\legal_rag_chatbot\.venv\Lib\site-packages\httpcore\_sync\connection.py", line 124, in _connect
+    stream = self._network_backend.connect_tcp(**kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Chars\AndroidStudioProjects\Qlite\legal_rag_chatbot\.venv\Lib\site-packages\httpcore\_backends\sync.py", line 207, in connect_tcp
+    with map_exceptions(exc_map):
+  File "C:\Program Files\Python311\Lib\contextlib.py", line 155, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "C:\Users\Chars\AndroidStudioProjects\Qlite\legal_rag_chatbot\.venv\Lib\site-packages\httpcore\_exceptions.py", line 14, in map_exceptions
+    raise to_exc(exc) from exc
+httpcore.ConnectError: [WinError 10061] No connection could be made because the target machine actively refused it
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Chars\AndroidStudioProjects\Qlite\legal_rag_chatbot\src\rag_pipeline.py", line 68, in model_stream
+    for chunk in stream:
+  File "C:\Users\Chars\AndroidStudioProjects\Qlite\legal_rag_chatbot\.venv\Lib\site-packages\ollama\_client.py", line 174, in inner
+    with self._client.stream(*args, **kwargs) as r:
+  File "C:\Program Files\Python311\Lib\contextlib.py", line 137, in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+  File "C:\Users\Chars\AndroidStudioProjects\Qlite\legal_rag_chatbot\.venv\Lib\site-packages\httpx\_client.py", line 868, in stream
+    response = self.send(
+               ^^^^^^^^^^
+  File "C:\Users\Chars\AndroidStudioProjects\Qlite\legal_rag_chatbot\.venv\Lib\site-packages\httpx\_client.py", line 914, in send
+    response = self._send_handling_auth(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Chars\AndroidStudioProjects\Qlite\legal_rag_chatbot\.venv\Lib\site-packages\httpx\_client.py", line 942, in _send_handling_auth
+    response = self._send_handling_redirects(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Chars\AndroidStudioProjects\Qlite\legal_rag_chatbot\.venv\Lib\site-packages\httpx\_client.py", line 979, in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Chars\AndroidStudioProjects\Qlite\legal_rag_chatbot\.venv\Lib\site-packages\httpx\_client.py", line 1014, in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Chars\AndroidStudioProjects\Qlite\legal_rag_chatbot\.venv\Lib\site-packages\httpx\_transports\default.py", line 249, in handle_request
+    with map_httpcore_exceptions():
+  File "C:\Program Files\Python311\Lib\contextlib.py", line 155, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "C:\Users\Chars\AndroidStudioProjects\Qlite\legal_rag_chatbot\.venv\Lib\site-packages\httpx\_transports\default.py", line 118, in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+httpx.ConnectError: [WinError 10061] No connection could be made because the target machine actively refused it
+2026-03-28 02:51:21,995 | INFO | rag_pipeline | Retrieved 6 chunks
+2026-03-28 02:51:24,030 | ERROR | rag_pipeline | LLM streaming failed: [WinError 10061] No connection could be made because the target machine actively refused it
+Traceback (most recent call last):
+  File "C:\Users\Chars\AndroidStudioProjects\Qlite\legal_rag_chatbot\.venv\Lib\site-packages\httpx\_transports\default.py", line 101, in map_httpcore_exceptions
+    yield
+  File "C:\Users\Chars\AndroidStudioProjects\Qlite\legal_rag_chatbot\.venv\Lib\site-packages\httpx\_transports\default.py", line 250, in handle_request
+    resp = self._pool.handle_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Chars\AndroidStudioProjects\Qlite\legal_rag_chatbot\.venv\Lib\site-packages\httpcore\_sync\connection_pool.py", line 256, in handle_request
+    raise exc from None
+  File "C:\Users\Chars\AndroidStudioProjects\Qlite\legal_rag_chatbot\.venv\Lib\site-packages\httpcore\_sync\connection_pool.py", line 236, in handle_request
+    response = connection.handle_request(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Chars\AndroidStudioProjects\Qlite\legal_rag_chatbot\.venv\Lib\site-packages\httpcore\_sync\connection.py", line 101, in handle_request
+    raise exc
+  File "C:\Users\Chars\AndroidStudioProjects\Qlite\legal_rag_chatbot\.venv\Lib\site-packages\httpcore\_sync\connection.py", line 78, in handle_request
+    stream = self._connect(request)
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Chars\AndroidStudioProjects\Qlite\legal_rag_chatbot\.venv\Lib\site-packages\httpcore\_sync\connection.py", line 124, in _connect
+    stream = self._network_backend.connect_tcp(**kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Chars\AndroidStudioProjects\Qlite\legal_rag_chatbot\.venv\Lib\site-packages\httpcore\_backends\sync.py", line 207, in connect_tcp
+    with map_exceptions(exc_map):
+  File "C:\Program Files\Python311\Lib\contextlib.py", line 155, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "C:\Users\Chars\AndroidStudioProjects\Qlite\legal_rag_chatbot\.venv\Lib\site-packages\httpcore\_exceptions.py", line 14, in map_exceptions
+    raise to_exc(exc) from exc
+httpcore.ConnectError: [WinError 10061] No connection could be made because the target machine actively refused it
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Chars\AndroidStudioProjects\Qlite\legal_rag_chatbot\src\rag_pipeline.py", line 72, in model_stream
+    for chunk in stream:
+  File "C:\Users\Chars\AndroidStudioProjects\Qlite\legal_rag_chatbot\.venv\Lib\site-packages\ollama\_client.py", line 174, in inner
+    with self._client.stream(*args, **kwargs) as r:
+  File "C:\Program Files\Python311\Lib\contextlib.py", line 137, in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+  File "C:\Users\Chars\AndroidStudioProjects\Qlite\legal_rag_chatbot\.venv\Lib\site-packages\httpx\_client.py", line 868, in stream
+    response = self.send(
+               ^^^^^^^^^^
+  File "C:\Users\Chars\AndroidStudioProjects\Qlite\legal_rag_chatbot\.venv\Lib\site-packages\httpx\_client.py", line 914, in send
+    response = self._send_handling_auth(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Chars\AndroidStudioProjects\Qlite\legal_rag_chatbot\.venv\Lib\site-packages\httpx\_client.py", line 942, in _send_handling_auth
+    response = self._send_handling_redirects(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Chars\AndroidStudioProjects\Qlite\legal_rag_chatbot\.venv\Lib\site-packages\httpx\_client.py", line 979, in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Chars\AndroidStudioProjects\Qlite\legal_rag_chatbot\.venv\Lib\site-packages\httpx\_client.py", line 1014, in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Chars\AndroidStudioProjects\Qlite\legal_rag_chatbot\.venv\Lib\site-packages\httpx\_transports\default.py", line 249, in handle_request
+    with map_httpcore_exceptions():
+  File "C:\Program Files\Python311\Lib\contextlib.py", line 155, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "C:\Users\Chars\AndroidStudioProjects\Qlite\legal_rag_chatbot\.venv\Lib\site-packages\httpx\_transports\default.py", line 118, in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+httpx.ConnectError: [WinError 10061] No connection could be made because the target machine actively refused it
+2026-03-28 02:52:03,284 | INFO | rag_pipeline | Retrieved 6 chunks
+2026-03-28 03:00:22,308 | INFO | ingest | Reading and cleaning PDF: c:\Users\Chars\AppData\Roaming\Cursor\User\workspaceStorage\353102621f8acf2440669663e164abc2\pdfs\c4d52795-b268-49d8-b60b-cf0aa164f31d\AI Training Document (1).pdf
+2026-03-28 03:00:23,012 | INFO | ingest | Chunking document
+2026-03-28 03:00:23,015 | INFO | ingest | Total chunks created: 41
+2026-03-28 03:00:23,017 | INFO | ingest | Embedding chunks in batches
+2026-03-28 03:00:36,619 | INFO | ingest | Persisting FAISS index to D:\rag_legal_run\legal_rag_chatbot\data\processed\faiss_store
+2026-03-28 03:00:36,640 | INFO | ingest | Ingestion complete. Stored chunks: 41
+2026-03-28 03:06:42,281 | INFO | rag_pipeline | Retrieved 6 chunks
+2026-03-28 03:07:24,634 | INFO | rag_pipeline | Retrieved 6 chunks
+2026-03-28 03:09:28,994 | INFO | rag_pipeline | Retrieved 6 chunks
+2026-03-28 03:09:31,043 | ERROR | rag_pipeline | LLM streaming failed: [WinError 10061] No connection could be made because the target machine actively refused it
+Traceback (most recent call last):
+  File "D:\rag_legal_run\legal_rag_chatbot\.venv\Lib\site-packages\httpx\_transports\default.py", line 101, in map_httpcore_exceptions
+    yield
+  File "D:\rag_legal_run\legal_rag_chatbot\.venv\Lib\site-packages\httpx\_transports\default.py", line 250, in handle_request
+    resp = self._pool.handle_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\rag_legal_run\legal_rag_chatbot\.venv\Lib\site-packages\httpcore\_sync\connection_pool.py", line 256, in handle_request
+    raise exc from None
+  File "D:\rag_legal_run\legal_rag_chatbot\.venv\Lib\site-packages\httpcore\_sync\connection_pool.py", line 236, in handle_request
+    response = connection.handle_request(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\rag_legal_run\legal_rag_chatbot\.venv\Lib\site-packages\httpcore\_sync\connection.py", line 101, in handle_request
+    raise exc
+  File "D:\rag_legal_run\legal_rag_chatbot\.venv\Lib\site-packages\httpcore\_sync\connection.py", line 78, in handle_request
+    stream = self._connect(request)
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\rag_legal_run\legal_rag_chatbot\.venv\Lib\site-packages\httpcore\_sync\connection.py", line 124, in _connect
+    stream = self._network_backend.connect_tcp(**kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\rag_legal_run\legal_rag_chatbot\.venv\Lib\site-packages\httpcore\_backends\sync.py", line 207, in connect_tcp
+    with map_exceptions(exc_map):
+  File "C:\Program Files\Python311\Lib\contextlib.py", line 155, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "D:\rag_legal_run\legal_rag_chatbot\.venv\Lib\site-packages\httpcore\_exceptions.py", line 14, in map_exceptions
+    raise to_exc(exc) from exc
+httpcore.ConnectError: [WinError 10061] No connection could be made because the target machine actively refused it
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "D:\rag_legal_run\legal_rag_chatbot\src\rag_pipeline.py", line 72, in model_stream
+    for chunk in stream:
+  File "D:\rag_legal_run\legal_rag_chatbot\.venv\Lib\site-packages\ollama\_client.py", line 174, in inner
+    with self._client.stream(*args, **kwargs) as r:
+  File "C:\Program Files\Python311\Lib\contextlib.py", line 137, in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+  File "D:\rag_legal_run\legal_rag_chatbot\.venv\Lib\site-packages\httpx\_client.py", line 868, in stream
+    response = self.send(
+               ^^^^^^^^^^
+  File "D:\rag_legal_run\legal_rag_chatbot\.venv\Lib\site-packages\httpx\_client.py", line 914, in send
+    response = self._send_handling_auth(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\rag_legal_run\legal_rag_chatbot\.venv\Lib\site-packages\httpx\_client.py", line 942, in _send_handling_auth
+    response = self._send_handling_redirects(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\rag_legal_run\legal_rag_chatbot\.venv\Lib\site-packages\httpx\_client.py", line 979, in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\rag_legal_run\legal_rag_chatbot\.venv\Lib\site-packages\httpx\_client.py", line 1014, in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\rag_legal_run\legal_rag_chatbot\.venv\Lib\site-packages\httpx\_transports\default.py", line 249, in handle_request
+    with map_httpcore_exceptions():
+  File "C:\Program Files\Python311\Lib\contextlib.py", line 155, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "D:\rag_legal_run\legal_rag_chatbot\.venv\Lib\site-packages\httpx\_transports\default.py", line 118, in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+httpx.ConnectError: [WinError 10061] No connection could be made because the target machine actively refused it
+2026-03-28 03:12:41,060 | INFO | rag_pipeline | Retrieved 6 chunks
+2026-03-28 03:12:42,077 | INFO | rag_pipeline | Ollama not reachable; using extractive grounded answer
+2026-03-28 03:16:07,215 | INFO | rag_pipeline | Retrieved 6 chunks
+2026-03-28 03:16:08,224 | INFO | rag_pipeline | Ollama not reachable; using extractive grounded answer
+2026-03-28 03:23:07,107 | INFO | rag_pipeline | Retrieved 6 chunks
+2026-03-28 03:23:26,498 | INFO | rag_pipeline | Retrieved 6 chunks
+2026-03-28 03:23:27,508 | INFO | rag_pipeline | Ollama not reachable; using extractive grounded answer
+2026-03-28 03:24:15,117 | INFO | rag_pipeline | Retrieved 6 chunks
+2026-03-28 03:24:16,125 | INFO | rag_pipeline | Ollama not reachable; using extractive grounded answer
+2026-03-28 03:56:32,877 | INFO | rag_pipeline | Retrieved 6 chunks
+2026-03-28 03:56:32,877 | INFO | rag_pipeline | Using local GGUF model at D:\rag_legal_run\models\qwen2.5-0.5b-instruct-q4_k_m.gguf
+2026-03-28 03:56:32,896 | INFO | llm_gguf | Loading GGUF model from D:\rag_legal_run\models\qwen2.5-0.5b-instruct-q4_k_m.gguf (one-time)
+2026-03-28 03:56:34,772 | WARNING | rag_pipeline | GGUF failed (Failed to create LLM 'gguf' from 'D:\rag_legal_run\models\qwen2.5-0.5b-instruct-q4_k_m.gguf'.); falling back to extractive
+2026-03-28 03:58:44,972 | INFO | rag_pipeline | Retrieved 6 chunks
+2026-03-28 03:58:44,973 | INFO | rag_pipeline | Using local GGUF model at D:\rag_legal_run\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+2026-03-28 03:58:44,994 | INFO | llm_gguf | Loading GGUF model from D:\rag_legal_run\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf (one-time)
+2026-03-28 04:00:49,477 | INFO | rag_pipeline | Retrieved 6 chunks
+2026-03-28 04:00:49,477 | INFO | rag_pipeline | Using local GGUF model at D:\rag_legal_run\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+2026-03-28 04:00:49,496 | INFO | llm_gguf | Loading GGUF model from D:\rag_legal_run\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf (one-time)
+2026-03-28 04:02:16,355 | INFO | rag_pipeline | Retrieved 6 chunks
+2026-03-28 04:02:16,356 | INFO | rag_pipeline | Using local GGUF model at D:\rag_legal_run\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+2026-03-28 04:02:16,365 | INFO | llm_gguf | Loading GGUF model from D:\rag_legal_run\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf (one-time)
+2026-03-28 04:04:35,449 | INFO | rag_pipeline | Retrieved 6 chunks
+2026-03-28 04:04:35,450 | INFO | rag_pipeline | Using local GGUF model at D:\rag_legal_run\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+2026-03-28 04:04:35,645 | INFO | llm_gguf | Loading GGUF with llama-cpp-python: D:\rag_legal_run\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+2026-03-28 04:05:49,615 | INFO | rag_pipeline | Retrieved 6 chunks
+2026-03-28 04:05:49,615 | INFO | rag_pipeline | Using local GGUF model at D:\rag_legal_run\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+2026-03-28 04:05:49,686 | INFO | llm_gguf | Loading GGUF with llama-cpp-python: D:\rag_legal_run\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+2026-03-28 04:08:54,654 | INFO | rag_pipeline | Retrieved 6 chunks
+2026-03-28 04:08:54,655 | INFO | rag_pipeline | Using local GGUF model at D:\rag_legal_run\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+2026-03-28 04:08:54,731 | INFO | llm_gguf | Loading GGUF with llama-cpp-python: D:\rag_legal_run\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
