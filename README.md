@@ -4,7 +4,7 @@ A production-ready **Retrieval-Augmented Generation (RAG)** chatbot that answers
 
 <p align="center">
   <a href="Media/Recording.mp4">
-    <img src="https://img.youtube.com/vi/YOUR_VIDEO_ID/0.jpg" alt="Watch Demo" width="700"/>
+    <img src="Media/Recording.mp4" alt="Watch Demo" width="700"/>
   </a>
 </p>
 
