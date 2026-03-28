@@ -18,12 +18,28 @@ A production-ready **Retrieval-Augmented Generation (RAG)** chatbot that answers
       text-align:center;
       font-size:16px;
       border-radius:8px;
-      cursor:pointer;">
+      cursor:pointer;
+      margin-bottom:10px;">
       🚀 Live Demo
     </button>
   </a>
 </p>
 
+<p align="center">
+  <a href="https://github.com/your-username/your-repo">
+    <button style="
+      background-color:#24292e;
+      border:none;
+      color:white;
+      padding:12px 24px;
+      text-align:center;
+      font-size:16px;
+      border-radius:8px;
+      cursor:pointer;">
+      💻 Go to GitHub
+    </button>
+  </a>
+</p>
 
 
 ---
