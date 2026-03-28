@@ -26,6 +26,44 @@ FALLBACK_RESPONSE = "I could not find this information in the provided document.
 
 OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://127.0.0.1:11434")
 
+# Short queries that only make sense in context of a previous message
+_FOLLOWUP_TRIGGERS = (
+    "explain", "simplify", "elaborate", "clarify", "what does that mean",
+    "in simple", "in simpler", "rephrase", "summarise", "summarize",
+    "what do you mean", "tell me more", "expand", "break it down",
+    "can you explain", "what is that", "what are those",
+)
+
+
+def _is_followup(query: str) -> bool:
+    """Return True if the query looks like a contextual follow-up."""
+    q = query.strip().lower()
+    # Short queries (under 6 words) that start with a trigger phrase
+    if len(q.split()) <= 6:
+        for trigger in _FOLLOWUP_TRIGGERS:
+            if q.startswith(trigger) or q == trigger:
+                return True
+    return False
+
+
+def _rewrite_followup(query: str, chat_history: List[Dict]) -> str:
+    """
+    Prepend the last assistant reply to a short follow-up query so FAISS
+    can find relevant chunks.
+    E.g. "Explain in simple words" → "Explain in simple words: <last answer>"
+    """
+    if not chat_history:
+        return query
+    # Find last assistant message
+    for msg in reversed(chat_history):
+        if msg.get("role") == "assistant":
+            last_answer = msg.get("content", "").strip()
+            if last_answer and last_answer != FALLBACK_RESPONSE:
+                # Use first 400 chars of last answer as retrieval anchor
+                anchor = last_answer[:400]
+                return f"{query}: {anchor}"
+    return query
+
 
 def _ollama_reachable(timeout_sec: float = 1.0) -> bool:
     try:
@@ -135,7 +173,22 @@ class RAGPipeline:
         self, query: str, chat_history: List[Dict] | None = None
     ) -> Tuple[Generator[str, None, None], List[Dict]]:
         safe_query = self._sanitize_query(query)
-        retrieved = self.retrieve(safe_query)
+        chat_history = chat_history or []
+
+        # ── Follow-up rewriting ───────────────────────────────────────────────
+        retrieval_query = safe_query
+        if _is_followup(safe_query):
+            retrieval_query = _rewrite_followup(safe_query, chat_history)
+            self.logger.info(
+                "Follow-up detected. Rewritten retrieval query: %s", retrieval_query[:120]
+            )
+
+        retrieved = self.retrieve(retrieval_query)
+
+        if not self._is_relevant(retrieved):
+            # Second chance: try original query if rewrite didn't help
+            if retrieval_query != safe_query:
+                retrieved = self.retrieve(safe_query)
 
         if not self._is_relevant(retrieved):
             def empty_stream() -> Generator[str, None, None]:
@@ -165,7 +218,6 @@ class RAGPipeline:
                     if tokens:
                         yield from tokens
                     else:
-                        # Groq key missing or unavailable — pure extractive
                         text = build_extractive_answer(safe_query, retrieved)
                         yield from stream_answer_text(text)
                 except Exception as exc:
