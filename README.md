@@ -27,7 +27,7 @@ A production-ready **Retrieval-Augmented Generation (RAG)** chatbot that answers
 
 
 <p align="center">
-  <a href="https://github.com/your-username/your-repo">
+  <a href="https://github.com/Harshit-Chauhan-20/Legal-AI-Chatbot">
     <button style="
       background-color:#24292e;
       border:none;
