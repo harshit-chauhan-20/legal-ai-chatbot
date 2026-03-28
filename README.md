@@ -29,11 +29,11 @@ A production-ready **Retrieval-Augmented Generation (RAG)** chatbot that answers
 ---
 ## Screenshots
 
-<p align="Left">
-  <a href="">
-    <img src="Media/Screenshot.png" alt="Watch Demo" width="700"/>
-    <img src="Media/Screenshot2.png" alt="Watch Demo" width="700"/>
-  </a>
+## Screenshots
+
+<p align="center">
+  <img src="Media/Screenshot.png" width="45%" style="margin-right:10px;" />
+  <img src="Media/Screenshot2.png" width="45%" />
 </p>
 
 
