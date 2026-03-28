@@ -29,6 +29,8 @@ class Settings:
         "EMBEDDING_MODEL_NAME", "sentence-transformers/all-MiniLM-L6-v2"
     )
     llm_model_name: str = os.getenv("LLM_MODEL_NAME", "qwen2.5:0.5b-instruct")
+    # Free Hugging Face model for LangChain inference
+    langchain_model_name: str = os.getenv("LANGCHAIN_MODEL_NAME", "google/flan-t5-small")
     chunk_min_words: int = int(os.getenv("CHUNK_MIN_WORDS", "100"))
     chunk_max_words: int = int(os.getenv("CHUNK_MAX_WORDS", "300"))
     retrieval_top_k: int = int(os.getenv("RETRIEVAL_TOP_K", "6"))
@@ -49,10 +51,4 @@ settings = Settings()
 
 def generator_display_name() -> str:
     """What the UI should show for the text generator."""
-    if settings.disable_local_gguf:
-        if not settings.use_llm:
-            return "Extractive only (grounded)"
-        return "Cloud: Ollama if reachable, else extractive"
-    if settings.local_gguf_path.is_file():
-        return f"Local GGUF (Q4): {settings.local_gguf_path.name}"
-    return f"Ollama: {settings.llm_model_name} (or extractive if offline)"
+    return f"LangChain: {settings.langchain_model_name}"

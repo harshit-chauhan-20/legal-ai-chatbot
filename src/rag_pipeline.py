@@ -201,15 +201,15 @@ Please explain or refine the above answer.
 
         sources = [c for c in retrieved if c["chunk_id"] in set(ids)]
 
-        # 🔥 GROQ PRIMARY
+        # 🔥 LANGCHAIN PRIMARY
         def stream():
             try:
-                tokens = list(_groq_answer(messages, self.logger))
-                if tokens:
-                    yield from tokens
-                    return
+                from src.llm_langchain import stream_generate
+                for chunk in stream_generate(SYSTEM_PROMPT, user_prompt):
+                    yield chunk
+                return
             except Exception as e:
-                self.logger.warning(f"Groq failed: {e}")
+                self.logger.warning(f"LangChain failed: {e}")
 
             # fallback
             text = build_extractive_answer(safe_query, retrieved)
