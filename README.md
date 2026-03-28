@@ -378,6 +378,3 @@ sentence-transformers>=2.7.0
 
 ---
 
-## License
-
-This project was built as part of a Junior AI Engineer technical assignment. All code, prompts, and architecture decisions are original work.
