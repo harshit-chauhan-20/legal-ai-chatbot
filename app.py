@@ -36,6 +36,12 @@ if "pipeline" not in st.session_state:
 with st.sidebar:
     st.header("⚙️ System")
     st.write(f"**Embedding:** `{settings.embedding_model_name}`")
+groq_key_set = bool(os.getenv("GROQ_API_KEY", ""))
+if not settings.use_llm:
+    if groq_key_set:
+        st.success("✅ Groq API active (llama3-8b-8192)")
+    else:
+        st.error("❌ GROQ_API_KEY not set — using pure extractive")
     st.write(
         f"**Indexed chunks:** `{st.session_state.pipeline.store.count()}`"
     )
@@ -59,7 +65,7 @@ with st.sidebar:
             "🔌 **Ollama** requires a locally running Ollama server "
             "(`ollama serve`). This will not work on Streamlit Cloud — "
             "the app will fall back to Extractive mode automatically if "
-            "Ollama is unreachable.",
+            "Ollama is unreachable. Its implemented for the localhost",
             icon="ℹ️",
         )
     elif mode == "Local GGUF":
