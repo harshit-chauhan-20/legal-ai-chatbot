@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import os
-import urllib.error
 import urllib.request
 from pathlib import Path
 from typing import Dict, Generator, List, Tuple
@@ -24,47 +23,54 @@ from src.vector_store import FaissVectorStore
 
 FALLBACK_RESPONSE = "I could not find this information in the provided document."
 
-# ────────────────────────────────────────────────────────────────
-# FOLLOW-UP HANDLING
-# ────────────────────────────────────────────────────────────────
+# ───────────────────────────────────────────────
+# FOLLOW-UP DETECTION
+# ───────────────────────────────────────────────
 
 _FOLLOWUP_TRIGGERS = (
     "explain", "simplify", "elaborate", "clarify", "what does that mean",
     "in simple", "in simpler", "rephrase", "summarise", "summarize",
     "what do you mean", "tell me more", "expand", "break it down",
     "can you explain", "what is that", "what are those",
+    "what is it", "what is it about", "what about this",
+    "explain again", "say that again", "repeat",
 )
 
 
 def _is_followup(query: str) -> bool:
-    q = query.strip().lower()
-    if len(q.split()) <= 6:
-        return any(q.startswith(t) for t in _FOLLOWUP_TRIGGERS)
-    return False
+    q = query.lower().strip()
+    return len(q.split()) <= 6 and any(q.startswith(t) for t in _FOLLOWUP_TRIGGERS)
 
 
 def _rewrite_followup(query: str, chat_history: List[Dict]) -> str:
     if not chat_history:
         return query
 
+    last_user = ""
+    last_assistant = ""
+
     for msg in reversed(chat_history):
-        if msg.get("role") == "assistant":
-            last = msg.get("content", "").strip()
-            if last and last != FALLBACK_RESPONSE:
-                return f"{query}: {last[:400]}"
-    return query
+        if msg["role"] == "assistant" and not last_assistant:
+            last_assistant = msg["content"]
+        elif msg["role"] == "user" and not last_user:
+            last_user = msg["content"]
+        if last_user and last_assistant:
+            break
+
+    combined = f"{last_user}\n{last_assistant}"
+    return f"{query}: {combined[:500]}"
 
 
-# ────────────────────────────────────────────────────────────────
+# ───────────────────────────────────────────────
 # GROQ STREAMING
-# ────────────────────────────────────────────────────────────────
+# ───────────────────────────────────────────────
 
 def _groq_answer(messages: list, logger) -> Generator[str, None, None]:
     import json as _json
 
     api_key = os.getenv("GROQ_API_KEY", "")
     if not api_key:
-        logger.warning("GROQ_API_KEY missing")
+        logger.warning("Missing GROQ_API_KEY")
         return
 
     payload = _json.dumps({
@@ -89,9 +95,11 @@ def _groq_answer(messages: list, logger) -> Generator[str, None, None]:
             line = raw.decode().strip()
             if not line.startswith("data:"):
                 continue
+
             data = line[5:].strip()
             if data == "[DONE]":
                 break
+
             try:
                 chunk = _json.loads(data)
                 token = chunk["choices"][0]["delta"].get("content", "")
@@ -101,16 +109,17 @@ def _groq_answer(messages: list, logger) -> Generator[str, None, None]:
                 continue
 
 
-# ────────────────────────────────────────────────────────────────
+# ───────────────────────────────────────────────
 # MAIN PIPELINE
-# ────────────────────────────────────────────────────────────────
+# ───────────────────────────────────────────────
 
 class RAGPipeline:
     def __init__(self):
         self.logger = setup_logger("rag_pipeline", settings.log_level)
         self.embeddings = EmbeddingService(settings.embedding_model_name)
         self.store = FaissVectorStore(
-            settings.vector_store_dir, settings.collection_name
+            settings.vector_store_dir,
+            settings.collection_name
         )
         self._ensure_faiss()
 
@@ -132,27 +141,23 @@ class RAGPipeline:
         self.store.upsert_chunks(chunks, vecs)
 
     def _sanitize(self, q: str) -> str:
-        q = " ".join(q.split())
-        return q[: settings.max_query_chars]
+        return " ".join(q.split())[: settings.max_query_chars]
 
     def retrieve(self, query: str) -> List[Dict]:
         vec = self.embeddings.embed_query(query)
-        hits = self.store.search(vec, settings.retrieval_top_k)
-        return hits
+        return self.store.search(vec, settings.retrieval_top_k)
 
-    def _is_relevant(self, hits, is_follow=False):
-        if not hits:
-            return False
-        thresh = settings.relevance_threshold
-        if is_follow:
-            thresh *= 0.7
-        return hits[0]["score"] >= thresh
+    def _is_relevant(self, hits: List[Dict]) -> bool:
+        return hits and hits[0]["score"] >= settings.relevance_threshold
 
-    def stream_answer(self, query, chat_history=None):
+    def stream_answer(
+        self, query: str, chat_history: List[Dict] | None = None
+    ) -> Tuple[Generator[str, None, None], List[Dict]]:
+
         chat_history = chat_history or []
         safe_query = self._sanitize(query)
 
-        # 🔥 FOLLOW-UP FIX
+        # 🔥 FOLLOW-UP HANDLING
         is_follow = _is_followup(safe_query)
         retrieval_query = (
             _rewrite_followup(safe_query, chat_history)
@@ -161,16 +166,32 @@ class RAGPipeline:
 
         retrieved = self.retrieve(retrieval_query)
 
-        if not self._is_relevant(retrieved, is_follow):
-            return (iter([FALLBACK_RESPONSE]), [])
+        # 🔥 IMPORTANT FIX: allow follow-ups even if low score
+        if not self._is_relevant(retrieved):
+            if not is_follow:
+                return (iter([FALLBACK_RESPONSE]), [])
 
         context, ids = build_context_block(retrieved)
         context = truncate_context_block(context, settings.llm_max_context_chars)
 
         # 🔥 GENERATION FIX
-        generation_query = safe_query
-        if is_follow:
-            generation_query += f"\n\nContext:\n{retrieval_query}"
+        if is_follow and chat_history:
+            prev = ""
+            for msg in reversed(chat_history):
+                if msg["role"] == "assistant":
+                    prev = msg["content"]
+                    break
+
+            generation_query = f"""
+User follow-up: {safe_query}
+
+Previous answer:
+{prev}
+
+Please explain or refine the above answer.
+"""
+        else:
+            generation_query = safe_query
 
         user_prompt = build_user_prompt(generation_query, context)
 
@@ -180,7 +201,7 @@ class RAGPipeline:
 
         sources = [c for c in retrieved if c["chunk_id"] in set(ids)]
 
-        # 🔥 GROQ (PRIMARY)
+        # 🔥 GROQ PRIMARY
         def stream():
             try:
                 tokens = list(_groq_answer(messages, self.logger))
