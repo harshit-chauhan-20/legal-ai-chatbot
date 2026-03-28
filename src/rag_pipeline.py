@@ -1,12 +1,14 @@
 from __future__ import annotations
 
+import json
 import os
 import urllib.error
 import urllib.request
 from pathlib import Path
 from typing import Dict, Generator, List, Tuple
 
-import ollama
+import faiss
+import numpy as np
 
 from config import settings
 from src.embeddings import EmbeddingService
@@ -34,6 +36,8 @@ def _ollama_reachable(timeout_sec: float = 1.0) -> bool:
 
 
 def _gguf_available() -> bool:
+    if settings.disable_local_gguf:
+        return False
     p = Path(settings.local_gguf_path)
     return p.is_file()
 
@@ -45,6 +49,25 @@ class RAGPipeline:
         self.store = FaissVectorStore(
             settings.vector_store_dir, settings.collection_name
         )
+        self._ensure_faiss_from_chunks_if_needed()
+
+    def _ensure_faiss_from_chunks_if_needed(self) -> None:
+        if self.store.count() > 0:
+            return
+        path = settings.processed_json_path
+        if not path.exists():
+            self.logger.warning("FAISS empty and no chunks.json at %s", path)
+            return
+        self.logger.info("Rebuilding FAISS from %s (first run or incompatible index)", path)
+        with open(path, encoding="utf-8") as f:
+            chunks = json.load(f)
+        vectors = self.embeddings.embed_texts(
+            [c["text"] for c in chunks], batch_size=32
+        )
+        if vectors.dtype != np.float32:
+            vectors = vectors.astype(np.float32)
+        faiss.normalize_L2(vectors)
+        self.store.upsert_chunks(chunks, vectors)
 
     def _sanitize_query(self, query: str) -> str:
         clean = " ".join(query.split())
@@ -119,6 +142,8 @@ class RAGPipeline:
 
             def ollama_stream() -> Generator[str, None, None]:
                 try:
+                    import ollama  # lazy import — not installed on Streamlit Cloud
+
                     stream = ollama.chat(
                         model=settings.llm_model_name,
                         messages=messages,
@@ -137,6 +162,7 @@ class RAGPipeline:
             return ollama_stream(), source_payload
 
         self.logger.info("No local GGUF and Ollama unreachable; extractive answer")
+
         def extractive_fallback() -> Generator[str, None, None]:
             text = build_extractive_answer(safe_query, retrieved)
             yield from stream_answer_text(text)
