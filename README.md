@@ -4,7 +4,7 @@ A production-ready **Retrieval-Augmented Generation (RAG)** chatbot that answers
 
 <p align="center">
   <a href="Media/Recording.mp4">
-    <img src="Media/Recording.mp4" alt="Watch Demo" width="700"/>
+    <img src="Media/Screenshot2.png" alt="Watch Demo" width="700"/>
   </a>
 </p>
 
@@ -17,17 +17,19 @@ A production-ready **Retrieval-Augmented Generation (RAG)** chatbot that answers
 
 
 ---
-#Screenshots
-<p align="center">
+## Screenshots
+
+<p align="Left">
   <a href="">
     <img src="Media/Screenshot.png" alt="Watch Demo" width="700"/>
   </a>
 </p>
-<p align="center">
+<p align="Right">
   <a href="">
     <img src="Media/Screenshot2.png" alt="Watch Demo" width="700"/>
   </a>
 </p>
+
 ---
 
 ## Table of Contents
