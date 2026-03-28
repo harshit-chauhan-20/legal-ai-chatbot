@@ -1,11 +1,11 @@
 streamlit>=1.33.0
 fastembed>=0.3.0
 faiss-cpu>=1.7.4
-ollama>=0.2.1
+//ollama>=0.2.1
 pypdf>=4.2.0
 numpy>=1.26.0
 tqdm>=4.66.0
 python-dotenv>=1.0.1
 # Windows cp311: use prebuilt wheel to avoid compiling:
 # pip install https://github.com/abetlen/llama-cpp-python/releases/download/v0.3.19/llama_cpp_python-0.3.19-cp311-cp311-win_amd64.whl
-llama-cpp-python==0.3.19
+//llama-cpp-python==0.3.19
