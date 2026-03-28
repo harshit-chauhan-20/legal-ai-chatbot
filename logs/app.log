@@ -227,3 +227,17 @@ httpx.ConnectError: [WinError 10061] No connection could be made because the tar
 2026-03-28 04:08:54,654 | INFO | rag_pipeline | Retrieved 6 chunks
 2026-03-28 04:08:54,655 | INFO | rag_pipeline | Using local GGUF model at D:\rag_legal_run\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
 2026-03-28 04:08:54,731 | INFO | llm_gguf | Loading GGUF with llama-cpp-python: D:\rag_legal_run\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+2026-03-28 15:27:54,982 | INFO | rag_pipeline | Retrieved 6 chunks
+2026-03-28 15:27:54,982 | INFO | rag_pipeline | Using LangChain model microsoft/DialoGPT-small
+2026-03-28 15:28:09,779 | INFO | llm_langchain | Loading Hugging Face model: microsoft/DialoGPT-small
+2026-03-28 15:31:17,123 | INFO | llm_langchain | Loading Hugging Face model: microsoft/DialoGPT-small
+2026-03-28 15:32:04,737 | INFO | llm_langchain | Loading Hugging Face model: google/flan-t5-small
+2026-03-28 15:32:11,222 | ERROR | llm_langchain | Failed to load Hugging Face model: "Unknown task text2text-generation, available tasks are ['any-to-any', 'audio-classification', 'automatic-speech-recognition', 'depth-estimation', 'document-question-answering', 'feature-extraction', 'fill-mask', 'image-classification', 'image-feature-extraction', 'image-segmentation', 'image-text-to-text', 'keypoint-matching', 'mask-generation', 'ner', 'object-detection', 'sentiment-analysis', 'table-question-answering', 'text-classification', 'text-generation', 'text-to-audio', 'text-to-speech', 'token-classification', 'video-classification', 'zero-shot-audio-classification', 'zero-shot-classification', 'zero-shot-image-classification', 'zero-shot-object-detection']"
+2026-03-28 15:32:42,205 | INFO | llm_langchain | Loading Hugging Face model: google/flan-t5-small
+2026-03-28 15:32:42,310 | ERROR | llm_langchain | Failed to load Hugging Face model: "Unknown task text2text-generation, available tasks are ['any-to-any', 'audio-classification', 'automatic-speech-recognition', 'depth-estimation', 'document-question-answering', 'feature-extraction', 'fill-mask', 'image-classification', 'image-feature-extraction', 'image-segmentation', 'image-text-to-text', 'keypoint-matching', 'mask-generation', 'ner', 'object-detection', 'sentiment-analysis', 'table-question-answering', 'text-classification', 'text-generation', 'text-to-audio', 'text-to-speech', 'token-classification', 'video-classification', 'zero-shot-audio-classification', 'zero-shot-classification', 'zero-shot-image-classification', 'zero-shot-object-detection']"
+2026-03-28 15:33:22,887 | INFO | llm_langchain | Loading Hugging Face model: google/flan-t5-small
+2026-03-28 15:33:59,250 | INFO | llm_langchain | Loading Hugging Face model: google/flan-t5-small
+2026-03-28 15:34:17,658 | INFO | rag_pipeline | Retrieved 6 chunks
+2026-03-28 15:34:17,660 | INFO | rag_pipeline | Using LangChain model google/flan-t5-small
+2026-03-28 15:34:29,358 | INFO | llm_langchain | Loading Hugging Face model: google/flan-t5-small
+2026-03-28 16:12:36,930 | INFO | llm_langchain | Loading Hugging Face model: google/flan-t5-small

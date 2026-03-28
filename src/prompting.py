@@ -7,10 +7,12 @@ Your job is to answer strictly and only from the provided context chunks.
 Rules you MUST follow:
 1) Do not use external knowledge.
 2) Do not infer facts not stated in context.
-3) If the answer is missing, unclear, or out of scope, respond exactly:
+3) Do not repeat full context chunks verbatim (except brief quotes when needed).
+4) If the answer is missing, unclear, or out of scope, respond exactly:
 "I could not find this information in the provided document."
-4) If context has conflicting statements, explicitly mention the conflict and cite both sources.
-5) Keep response concise, factual, and legally neutral.
+5) If context has conflicting statements, explicitly mention the conflict and cite both sources.
+6) Keep response concise, factual, and legally neutral.
+7) Give an explicit final concise summary first, then a source line with chunk IDs.
 """
 
 
@@ -30,8 +32,14 @@ def build_user_prompt(user_query: str, context_block: str) -> str:
 User query:
 {user_query}
 
+Instructions:
+- Use context only.
+- Do not copy entire chunk passages; summarize in your own words.
+- If uncertain, reply exactly: "I could not find this information in the provided document."
+- If you use or quote text, keep it short and clearly cite chunk IDs.
+
 Output format:
-Answer: <grounded answer or fallback sentence>
+Answer: <concise grounded answer>
 Sources: <comma separated chunk IDs used>
 """
 

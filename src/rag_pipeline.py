@@ -23,6 +23,24 @@ from src.vector_store import FaissVectorStore
 
 FALLBACK_RESPONSE = "I could not find this information in the provided document."
 
+
+def _looks_like_raw_chunk(text: str, retrieved: List[Dict]) -> bool:
+    sample = text.strip()
+    if len(sample) < 36:
+        return False
+
+    test_fragment = sample[:120].lower()
+    for chunk in retrieved:
+        chunk_text = chunk.get("text", "").strip().lower()
+        if not chunk_text:
+            continue
+
+        if test_fragment in chunk_text:
+            return True
+
+    return False
+
+
 # ───────────────────────────────────────────────
 # FOLLOW-UP DETECTION
 # ───────────────────────────────────────────────
@@ -205,13 +223,20 @@ Please explain or refine the above answer.
         def stream():
             try:
                 from src.llm_langchain import stream_generate
-                for chunk in stream_generate(SYSTEM_PROMPT, user_prompt):
-                    yield chunk
+
+                llm_text = "".join(stream_generate(SYSTEM_PROMPT, user_prompt)).strip()
+
+                if _looks_like_raw_chunk(llm_text, retrieved):
+                    self.logger.warning("LLM produced raw chunk text; switching to grounded summary fallback")
+                    llm_text = build_extractive_answer(safe_query, retrieved)
+
+                # Always return through stream_answer_text for consistent token style.
+                yield from stream_answer_text(llm_text)
                 return
             except Exception as e:
                 self.logger.warning(f"LangChain failed: {e}")
 
-            # fallback
+            # fallback for LLM error
             text = build_extractive_answer(safe_query, retrieved)
             yield from stream_answer_text(text)
 

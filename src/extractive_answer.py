@@ -77,20 +77,14 @@ def build_extractive_answer(
             if len(sent) >= 20:
                 picked.append((sent, top["chunk_id"]))
 
-    lines: List[str] = [
-        "**Answer (verbatim excerpts from the document):**",
-        "",
-    ]
-    word_count = 0
-    for sent, cid in picked:
-        line = f"- {sent} `[{cid}]`"
-        wc = len(line.split())
-        if word_count + wc > max_answer_words:
-            break
-        lines.append(line)
-        word_count += wc
+    # Produce a concise summary instead of raw chunk dumps.
+    source_ids = sorted({cid for _sent, cid in picked})
+    summary_sentences = [sent for sent, _cid in picked][:5]
+    answer = " ".join(summary_sentences)
+    if not answer:
+        answer = "I could not find this information in the provided document."
 
-    return "\n".join(lines).strip()
+    return f"{answer}\n\nSources: {', '.join(source_ids)}"
 
 
 def stream_answer_text(text: str) -> Generator[str, None, None]:
