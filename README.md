@@ -3,14 +3,24 @@
 A production-ready **Retrieval-Augmented Generation (RAG)** chatbot that answers questions **strictly from a provided legal document**. Built with a full semantic search pipeline, real-time streaming responses, and a clean Streamlit interface — deployable on both cloud and local machines.
 
 <p align="center">
-  <a href="Media/Recording.mp4">
-    <img src="Media/Screenshot2.png" alt="Watch Demo" width="700"/>
-  </a>
+  <video width="700" autoplay loop muted playsinline>
+    <source src="Media/Recording.mp4" type="video/mp4">
+  </video>
 </p>
 
 <p align="center">
   <a href="https://legal-ai-chatbot-hc.streamlit.app/">
-    <img src="https://img.shields.io/badge/🚀%20Live%20Demo-Click%20Here-blue?style=for-the-badge&logo=streamlit" />
+    <button style="
+      background-color:#4CAF50;
+      border:none;
+      color:white;
+      padding:12px 24px;
+      text-align:center;
+      font-size:16px;
+      border-radius:8px;
+      cursor:pointer;">
+      🚀 Live Demo
+    </button>
   </a>
 </p>
 
@@ -22,13 +32,10 @@ A production-ready **Retrieval-Augmented Generation (RAG)** chatbot that answers
 <p align="Left">
   <a href="">
     <img src="Media/Screenshot.png" alt="Watch Demo" width="700"/>
-  </a>
-</p>
-<p align="Right">
-  <a href="">
     <img src="Media/Screenshot2.png" alt="Watch Demo" width="700"/>
   </a>
 </p>
+
 
 ---
 
