@@ -50,15 +50,20 @@ with st.sidebar:
     st.subheader("🤖 Answer Mode")
     mode = st.radio(
         "Choose how answers are generated:",
-        options=["Extractive (Grounded)", "Ollama (Local LLM)", "Local GGUF"],
-        index=0,
+        options=[
+            "Extractive (Grounded)",
+            "LangChain (Local LLM)",
+            "Ollama (Local LLM)",
+            "Local GGUF",
+        ],
+        index=1,
         help=(
-            "Extractive (Grounded): Uses Groq LLM (cloud) to generate a "
-            "natural answer strictly from retrieved document chunks.\n\n"
-            "Ollama (Local LLM): Runs a local Ollama model — only works "
-            "when deployed on your own machine.\n\n"
-            "Local GGUF: Runs a quantized GGUF model file — only works "
-            "when deployed locally with llama-cpp-python installed."
+            "Extractive (Grounded): Uses pure retrieval and chunk citation, "
+            "no metadata LLM.\n\n"
+            "LangChain (Local LLM): Uses local Hugging Face model (FLAN-T5 Small) "
+            "for grounded RAG responses.\n\n"
+            "Ollama (Local LLM): Runs a local Ollama model (if available locally).\n\n"
+            "Local GGUF: Runs a quantized GGUF model file locally via llama-cpp-python."
         ),
     )
 
@@ -108,6 +113,11 @@ with st.sidebar:
     # Map UI choice → env flags consumed by the pipeline
     os.environ["USE_LLM"] = "false" if mode == "Extractive (Grounded)" else "true"
     os.environ["DISABLE_LOCAL_GGUF"] = "false" if mode == "Local GGUF" else "true"
+    # LangChain and Ollama mode share LLM = true, GGUF mode uses local file.
+    if mode == "LangChain (Local LLM)":
+        os.environ["DISABLE_LOCAL_GGUF"] = "true"
+    elif mode == "Ollama (Local LLM)":
+        os.environ["DISABLE_LOCAL_GGUF"] = "true"
 
     st.divider()
     st.write(f"**Active generator:** {generator_display_name()}")
