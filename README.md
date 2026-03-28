@@ -29,8 +29,6 @@ A production-ready **Retrieval-Augmented Generation (RAG)** chatbot that answers
 ---
 ## Screenshots
 
-## Screenshots
-
 <p align="center">
   <img src="Media/Screenshot.png" width="45%" style="margin-right:10px;" />
   <img src="Media/Screenshot2.png" width="45%" />
