@@ -97,48 +97,18 @@ class RAGPipeline:
 
             return extractive_only(), source_payload
 
-        # Priority: local Q4 GGUF (no admin) -> Ollama -> extractive
-        if _gguf_available():
-            self.logger.info("Using local GGUF model at %s", settings.local_gguf_path)
+        # Use LangChain with free Hugging Face model
+        self.logger.info("Using LangChain model %s", settings.langchain_model_name)
 
-            def gguf_stream() -> Generator[str, None, None]:
-                try:
-                    from src.llm_gguf import stream_generate
+        def langchain_stream() -> Generator[str, None, None]:
+            try:
+                from src.llm_langchain import stream_generate
 
-                    for chunk in stream_generate(SYSTEM_PROMPT, user_prompt):
-                        yield chunk
-                except Exception as exc:
-                    self.logger.warning("GGUF failed (%s); falling back to extractive", exc)
-                    text = build_extractive_answer(safe_query, retrieved)
-                    yield from stream_answer_text(text)
+                for chunk in stream_generate(SYSTEM_PROMPT, user_prompt):
+                    yield chunk
+            except Exception as exc:
+                self.logger.warning("LangChain failed (%s); falling back to extractive", exc)
+                text = build_extractive_answer(safe_query, retrieved)
+                yield from stream_answer_text(text)
 
-            return gguf_stream(), source_payload
-
-        if _ollama_reachable():
-            self.logger.info("Using Ollama model %s", settings.llm_model_name)
-
-            def ollama_stream() -> Generator[str, None, None]:
-                try:
-                    stream = ollama.chat(
-                        model=settings.llm_model_name,
-                        messages=messages,
-                        stream=True,
-                        options={"temperature": 0, "num_predict": 512},
-                    )
-                    for chunk in stream:
-                        token = chunk.get("message", {}).get("content", "")
-                        if token:
-                            yield token
-                except Exception as exc:
-                    self.logger.warning("Ollama failed (%s); falling back to extractive", exc)
-                    text = build_extractive_answer(safe_query, retrieved)
-                    yield from stream_answer_text(text)
-
-            return ollama_stream(), source_payload
-
-        self.logger.info("No local GGUF and Ollama unreachable; extractive answer")
-        def extractive_fallback() -> Generator[str, None, None]:
-            text = build_extractive_answer(safe_query, retrieved)
-            yield from stream_answer_text(text)
-
-        return extractive_fallback(), source_payload
+        return langchain_stream(), source_payload
