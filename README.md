@@ -2,6 +2,18 @@
 
 A production-ready **Retrieval-Augmented Generation (RAG)** chatbot that answers questions **strictly from a provided legal document**. Built with a full semantic search pipeline, real-time streaming responses, and a clean Streamlit interface — deployable on both cloud and local machines.
 
+<p align="center">
+  <a href="YOUR_VIDEO_LINK_HERE">
+    <img src="https://img.youtube.com/vi/YOUR_VIDEO_ID/0.jpg" alt="Watch Demo" width="700"/>
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://legal-ai-chatbot-hc.streamlit.app/">
+    <img src="https://img.shields.io/badge/🚀%20Live%20Demo-Click%20Here-blue?style=for-the-badge&logo=streamlit" />
+  </a>
+</p>
+
 🔗 **Live Demo:** [legal-ai-chatbot-hc.streamlit.app](https://legal-ai-chatbot-hc.streamlit.app)
 
 ---
