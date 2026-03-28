@@ -3,7 +3,7 @@
 A production-ready **Retrieval-Augmented Generation (RAG)** chatbot that answers questions **strictly from a provided legal document**. Built with a full semantic search pipeline, real-time streaming responses, and a clean Streamlit interface — deployable on both cloud and local machines.
 
 <p align="center">
-  <a href="YOUR_VIDEO_LINK_HERE">
+  <a href="Media/Recording.mp4">
     <img src="https://img.youtube.com/vi/YOUR_VIDEO_ID/0.jpg" alt="Watch Demo" width="700"/>
   </a>
 </p>
@@ -14,8 +14,20 @@ A production-ready **Retrieval-Augmented Generation (RAG)** chatbot that answers
   </a>
 </p>
 
-🔗 **Live Demo:** [legal-ai-chatbot-hc.streamlit.app](https://legal-ai-chatbot-hc.streamlit.app)
 
+
+---
+#Screenshots
+<p align="center">
+  <a href="">
+    <img src="Media/Screenshot.png" alt="Watch Demo" width="700"/>
+  </a>
+</p>
+<p align="center">
+  <a href="">
+    <img src="Media/Screenshot2.png" alt="Watch Demo" width="700"/>
+  </a>
+</p>
 ---
 
 ## Table of Contents
