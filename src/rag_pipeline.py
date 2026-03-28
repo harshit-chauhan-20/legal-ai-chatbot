@@ -42,6 +42,51 @@ def _gguf_available() -> bool:
     return p.is_file()
 
 
+def _groq_answer(messages: list, logger) -> Generator[str, None, None]:
+    """Call Groq API with streaming and yield tokens."""
+    import json as _json
+
+    groq_api_key = os.getenv("GROQ_API_KEY", "")
+    if not groq_api_key:
+        logger.warning("GROQ_API_KEY not set; falling back to extractive")
+        return
+
+    groq_model = os.getenv("GROQ_MODEL", "llama3-8b-8192")
+    payload = _json.dumps({
+        "model": groq_model,
+        "messages": messages,
+        "stream": True,
+        "temperature": 0,
+        "max_tokens": 512,
+    }).encode("utf-8")
+
+    req = urllib.request.Request(
+        "https://api.groq.com/openai/v1/chat/completions",
+        data=payload,
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {groq_api_key}",
+        },
+        method="POST",
+    )
+
+    with urllib.request.urlopen(req) as resp:
+        for raw_line in resp:
+            line = raw_line.decode("utf-8").strip()
+            if not line.startswith("data:"):
+                continue
+            data_str = line[len("data:"):].strip()
+            if data_str == "[DONE]":
+                break
+            try:
+                chunk = _json.loads(data_str)
+                token = chunk["choices"][0]["delta"].get("content", "")
+                if token:
+                    yield token
+            except Exception:
+                continue
+
+
 class RAGPipeline:
     def __init__(self):
         self.logger = setup_logger("rag_pipeline", settings.log_level)
@@ -95,7 +140,6 @@ class RAGPipeline:
         if not self._is_relevant(retrieved):
             def empty_stream() -> Generator[str, None, None]:
                 yield FALLBACK_RESPONSE
-
             return empty_stream(), []
 
         context_block, source_ids = build_context_block(retrieved)
@@ -111,23 +155,33 @@ class RAGPipeline:
 
         source_payload = [c for c in retrieved if c["chunk_id"] in set(source_ids)]
 
+        # ── Mode: Extractive / Groq Grounded (USE_LLM=false) ──────────────────
         if not settings.use_llm:
-            self.logger.info("USE_LLM disabled; using extractive grounded answer")
+            self.logger.info("USE_LLM disabled; using Groq grounded answer")
 
-            def extractive_only() -> Generator[str, None, None]:
-                text = build_extractive_answer(safe_query, retrieved)
-                yield from stream_answer_text(text)
+            def groq_grounded_stream() -> Generator[str, None, None]:
+                try:
+                    tokens = list(_groq_answer(messages, self.logger))
+                    if tokens:
+                        yield from tokens
+                    else:
+                        # Groq key missing or unavailable — pure extractive
+                        text = build_extractive_answer(safe_query, retrieved)
+                        yield from stream_answer_text(text)
+                except Exception as exc:
+                    self.logger.warning("Groq failed (%s); falling back to extractive", exc)
+                    text = build_extractive_answer(safe_query, retrieved)
+                    yield from stream_answer_text(text)
 
-            return extractive_only(), source_payload
+            return groq_grounded_stream(), source_payload
 
-        # Priority: local Q4 GGUF (no admin) -> Ollama -> extractive
+        # ── Mode: Local GGUF ──────────────────────────────────────────────────
         if _gguf_available():
             self.logger.info("Using local GGUF model at %s", settings.local_gguf_path)
 
             def gguf_stream() -> Generator[str, None, None]:
                 try:
                     from src.llm_gguf import stream_generate
-
                     for chunk in stream_generate(SYSTEM_PROMPT, user_prompt):
                         yield chunk
                 except Exception as exc:
@@ -137,13 +191,13 @@ class RAGPipeline:
 
             return gguf_stream(), source_payload
 
+        # ── Mode: Ollama ──────────────────────────────────────────────────────
         if _ollama_reachable():
             self.logger.info("Using Ollama model %s", settings.llm_model_name)
 
             def ollama_stream() -> Generator[str, None, None]:
                 try:
                     import ollama  # lazy import — not installed on Streamlit Cloud
-
                     stream = ollama.chat(
                         model=settings.llm_model_name,
                         messages=messages,
@@ -161,7 +215,8 @@ class RAGPipeline:
 
             return ollama_stream(), source_payload
 
-        self.logger.info("No local GGUF and Ollama unreachable; extractive answer")
+        # ── Final fallback: extractive ────────────────────────────────────────
+        self.logger.info("No LLM available; using pure extractive answer")
 
         def extractive_fallback() -> Generator[str, None, None]:
             text = build_extractive_answer(safe_query, retrieved)
