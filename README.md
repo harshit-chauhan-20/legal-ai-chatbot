@@ -27,6 +27,7 @@ A production-ready **Retrieval-Augmented Generation (RAG)** chatbot that answers
 
 
 ---
+
 ## Screenshots
 
 <p align="center">
