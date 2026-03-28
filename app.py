@@ -38,12 +38,11 @@ with st.sidebar:
     st.write(f"**Embedding:** `{settings.embedding_model_name}`")
     st.write(f"**Indexed chunks:** `{st.session_state.pipeline.store.count()}`")
 
-    # ── Groq status badge ─────────────────────────────────────────────────────
     groq_key_set = bool(os.getenv("GROQ_API_KEY", ""))
     if groq_key_set:
-        st.write("✅ Groq API active ", icon="🤖")
+        st.write("**Groq API:** `✅ Active`")
     else:
-        st.write("⚠️ GROQ_API_KEY not set — falling back to pure extractive", icon="🔑")
+        st.write("**Groq API:** `❌ Key not set`")
 
     st.divider()
 
