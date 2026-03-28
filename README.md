@@ -3,7 +3,12 @@
 A production-ready **Retrieval-Augmented Generation (RAG)** chatbot that answers questions **strictly from a provided legal document**. Built with a full semantic search pipeline, real-time streaming responses, and a clean Streamlit interface — deployable on both cloud and local machines.
 
 <p align="center">
-  <video width="700" autoplay loop muted playsinline>
+  <video 
+    style="width: 100%; max-width: 700px; height: auto; border-radius: 10px;" 
+    autoplay 
+    loop 
+    muted 
+    playsinline>
     <source src="Media/Recording.mp4" type="video/mp4">
   </video>
 </p>
