@@ -80,15 +80,14 @@ with st.sidebar:
 
     elif mode == "Ollama (Local LLM)":
         st.info(
-            "🖥️ **Ollama (Local LLM)** — this mode is implemented in the code "
-            "and works when you run the app locally on your own machine.\n\n"
+            "🖥️ **Ollama (Local LLM)** — this mode is fully implemented and works when running the app locally on your machine.\n\n"
             "**To use locally:**\n"
             "1. Install Ollama from [ollama.com](https://ollama.com)\n"
             "2. Run `ollama pull qwen2.5:0.5b-instruct`\n"
-            "3. Run `ollama serve`\n"
-            "4. Then start the app with `streamlit run app.py`\n\n"
-            "⚠️ On Streamlit Cloud, Ollama cannot run — the app will "
-            "automatically fall back to extractive mode.",
+            "3. Start the Ollama server using `ollama serve`\n"
+            "4. Launch the app with `streamlit run app.py`\n\n"
+            "⚠️ Due to Streamlit Cloud limitations (no support for local servers), this feature works only in a local environment. "
+            "For deployed versions, the app falls back to extractive or hosted LLM modes.",
             icon="ℹ️",
         )
 
