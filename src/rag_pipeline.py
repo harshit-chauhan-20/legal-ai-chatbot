@@ -24,9 +24,10 @@ from src.vector_store import FaissVectorStore
 
 FALLBACK_RESPONSE = "I could not find this information in the provided document."
 
-OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://127.0.0.1:11434")
+# ────────────────────────────────────────────────────────────────
+# FOLLOW-UP HANDLING
+# ────────────────────────────────────────────────────────────────
 
-# Short queries that only make sense in context of a previous message
 _FOLLOWUP_TRIGGERS = (
     "explain", "simplify", "elaborate", "clarify", "what does that mean",
     "in simple", "in simpler", "rephrase", "summarise", "summarize",
@@ -36,62 +37,38 @@ _FOLLOWUP_TRIGGERS = (
 
 
 def _is_followup(query: str) -> bool:
-    """Return True if the query looks like a contextual follow-up."""
     q = query.strip().lower()
-    # Short queries (under 6 words) that start with a trigger phrase
     if len(q.split()) <= 6:
-        for trigger in _FOLLOWUP_TRIGGERS:
-            if q.startswith(trigger) or q == trigger:
-                return True
+        return any(q.startswith(t) for t in _FOLLOWUP_TRIGGERS)
     return False
 
 
 def _rewrite_followup(query: str, chat_history: List[Dict]) -> str:
-    """
-    Prepend the last assistant reply to a short follow-up query so FAISS
-    can find relevant chunks.
-    E.g. "Explain in simple words" → "Explain in simple words: <last answer>"
-    """
     if not chat_history:
         return query
-    # Find last assistant message
+
     for msg in reversed(chat_history):
         if msg.get("role") == "assistant":
-            last_answer = msg.get("content", "").strip()
-            if last_answer and last_answer != FALLBACK_RESPONSE:
-                # Use first 400 chars of last answer as retrieval anchor
-                anchor = last_answer[:400]
-                return f"{query}: {anchor}"
+            last = msg.get("content", "").strip()
+            if last and last != FALLBACK_RESPONSE:
+                return f"{query}: {last[:400]}"
     return query
 
 
-def _ollama_reachable(timeout_sec: float = 1.0) -> bool:
-    try:
-        urllib.request.urlopen(f"{OLLAMA_HOST.rstrip('/')}/api/tags", timeout=timeout_sec)
-        return True
-    except (urllib.error.URLError, TimeoutError, OSError):
-        return False
-
-
-def _gguf_available() -> bool:
-    if settings.disable_local_gguf:
-        return False
-    p = Path(settings.local_gguf_path)
-    return p.is_file()
-
+# ────────────────────────────────────────────────────────────────
+# GROQ STREAMING
+# ────────────────────────────────────────────────────────────────
 
 def _groq_answer(messages: list, logger) -> Generator[str, None, None]:
-    """Call Groq API with streaming and yield tokens."""
     import json as _json
 
-    groq_api_key = os.getenv("GROQ_API_KEY", "")
-    if not groq_api_key:
-        logger.warning("GROQ_API_KEY not set; falling back to extractive")
+    api_key = os.getenv("GROQ_API_KEY", "")
+    if not api_key:
+        logger.warning("GROQ_API_KEY missing")
         return
 
-    groq_model = os.getenv("GROQ_MODEL", "llama3-8b-8192")
     payload = _json.dumps({
-        "model": groq_model,
+        "model": os.getenv("GROQ_MODEL", "llama3-8b-8192"),
         "messages": messages,
         "stream": True,
         "temperature": 0,
@@ -103,27 +80,30 @@ def _groq_answer(messages: list, logger) -> Generator[str, None, None]:
         data=payload,
         headers={
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {groq_api_key}",
+            "Authorization": f"Bearer {api_key}",
         },
-        method="POST",
     )
 
     with urllib.request.urlopen(req) as resp:
-        for raw_line in resp:
-            line = raw_line.decode("utf-8").strip()
+        for raw in resp:
+            line = raw.decode().strip()
             if not line.startswith("data:"):
                 continue
-            data_str = line[len("data:"):].strip()
-            if data_str == "[DONE]":
+            data = line[5:].strip()
+            if data == "[DONE]":
                 break
             try:
-                chunk = _json.loads(data_str)
+                chunk = _json.loads(data)
                 token = chunk["choices"][0]["delta"].get("content", "")
                 if token:
                     yield token
-            except Exception:
+            except:
                 continue
 
+
+# ────────────────────────────────────────────────────────────────
+# MAIN PIPELINE
+# ────────────────────────────────────────────────────────────────
 
 class RAGPipeline:
     def __init__(self):
@@ -132,146 +112,86 @@ class RAGPipeline:
         self.store = FaissVectorStore(
             settings.vector_store_dir, settings.collection_name
         )
-        self._ensure_faiss_from_chunks_if_needed()
+        self._ensure_faiss()
 
-    def _ensure_faiss_from_chunks_if_needed(self) -> None:
+    def _ensure_faiss(self):
         if self.store.count() > 0:
             return
+
         path = settings.processed_json_path
         if not path.exists():
-            self.logger.warning("FAISS empty and no chunks.json at %s", path)
             return
-        self.logger.info("Rebuilding FAISS from %s (first run or incompatible index)", path)
+
         with open(path, encoding="utf-8") as f:
             chunks = json.load(f)
-        vectors = self.embeddings.embed_texts(
-            [c["text"] for c in chunks], batch_size=32
-        )
-        if vectors.dtype != np.float32:
-            vectors = vectors.astype(np.float32)
-        faiss.normalize_L2(vectors)
-        self.store.upsert_chunks(chunks, vectors)
 
-    def _sanitize_query(self, query: str) -> str:
-        clean = " ".join(query.split())
-        if len(clean) > settings.max_query_chars:
-            clean = clean[: settings.max_query_chars]
-        return clean
+        vecs = self.embeddings.embed_texts([c["text"] for c in chunks])
+        vecs = vecs.astype(np.float32)
+        faiss.normalize_L2(vecs)
+
+        self.store.upsert_chunks(chunks, vecs)
+
+    def _sanitize(self, q: str) -> str:
+        q = " ".join(q.split())
+        return q[: settings.max_query_chars]
 
     def retrieve(self, query: str) -> List[Dict]:
-        query_vec = self.embeddings.embed_query(query)
-        hits = self.store.search(query_vec, top_k=settings.retrieval_top_k)
-        self.logger.info("Retrieved %s chunks", len(hits))
+        vec = self.embeddings.embed_query(query)
+        hits = self.store.search(vec, settings.retrieval_top_k)
         return hits
 
-    def _is_relevant(self, hits: List[Dict]) -> bool:
+    def _is_relevant(self, hits, is_follow=False):
         if not hits:
             return False
-        return hits[0]["score"] >= settings.relevance_threshold
+        thresh = settings.relevance_threshold
+        if is_follow:
+            thresh *= 0.7
+        return hits[0]["score"] >= thresh
 
-    def stream_answer(
-        self, query: str, chat_history: List[Dict] | None = None
-    ) -> Tuple[Generator[str, None, None], List[Dict]]:
-        safe_query = self._sanitize_query(query)
+    def stream_answer(self, query, chat_history=None):
         chat_history = chat_history or []
+        safe_query = self._sanitize(query)
 
-        # ── Follow-up rewriting ───────────────────────────────────────────────
-        retrieval_query = safe_query
-        if _is_followup(safe_query):
-            retrieval_query = _rewrite_followup(safe_query, chat_history)
-            self.logger.info(
-                "Follow-up detected. Rewritten retrieval query: %s", retrieval_query[:120]
-            )
+        # 🔥 FOLLOW-UP FIX
+        is_follow = _is_followup(safe_query)
+        retrieval_query = (
+            _rewrite_followup(safe_query, chat_history)
+            if is_follow else safe_query
+        )
 
         retrieved = self.retrieve(retrieval_query)
 
-        if not self._is_relevant(retrieved):
-            # Second chance: try original query if rewrite didn't help
-            if retrieval_query != safe_query:
-                retrieved = self.retrieve(safe_query)
+        if not self._is_relevant(retrieved, is_follow):
+            return (iter([FALLBACK_RESPONSE]), [])
 
-        if not self._is_relevant(retrieved):
-            def empty_stream() -> Generator[str, None, None]:
-                yield FALLBACK_RESPONSE
-            return empty_stream(), []
+        context, ids = build_context_block(retrieved)
+        context = truncate_context_block(context, settings.llm_max_context_chars)
 
-        context_block, source_ids = build_context_block(retrieved)
-        ctx_for_llm = truncate_context_block(
-            context_block, settings.llm_max_context_chars
-        )
-        user_prompt = build_user_prompt(safe_query, ctx_for_llm)
+        # 🔥 GENERATION FIX
+        generation_query = safe_query
+        if is_follow:
+            generation_query += f"\n\nContext:\n{retrieval_query}"
+
+        user_prompt = build_user_prompt(generation_query, context)
 
         messages = [{"role": "system", "content": SYSTEM_PROMPT}]
-        if chat_history:
-            messages.extend(chat_history[-4:])
+        messages.extend(chat_history[-4:])
         messages.append({"role": "user", "content": user_prompt})
 
-        source_payload = [c for c in retrieved if c["chunk_id"] in set(source_ids)]
+        sources = [c for c in retrieved if c["chunk_id"] in set(ids)]
 
-        # ── Mode: Extractive / Groq Grounded (USE_LLM=false) ──────────────────
-        if not settings.use_llm:
-            self.logger.info("USE_LLM disabled; using Groq grounded answer")
+        # 🔥 GROQ (PRIMARY)
+        def stream():
+            try:
+                tokens = list(_groq_answer(messages, self.logger))
+                if tokens:
+                    yield from tokens
+                    return
+            except Exception as e:
+                self.logger.warning(f"Groq failed: {e}")
 
-            def groq_grounded_stream() -> Generator[str, None, None]:
-                try:
-                    tokens = list(_groq_answer(messages, self.logger))
-                    if tokens:
-                        yield from tokens
-                    else:
-                        text = build_extractive_answer(safe_query, retrieved)
-                        yield from stream_answer_text(text)
-                except Exception as exc:
-                    self.logger.warning("Groq failed (%s); falling back to extractive", exc)
-                    text = build_extractive_answer(safe_query, retrieved)
-                    yield from stream_answer_text(text)
-
-            return groq_grounded_stream(), source_payload
-
-        # ── Mode: Local GGUF ──────────────────────────────────────────────────
-        if _gguf_available():
-            self.logger.info("Using local GGUF model at %s", settings.local_gguf_path)
-
-            def gguf_stream() -> Generator[str, None, None]:
-                try:
-                    from src.llm_gguf import stream_generate
-                    for chunk in stream_generate(SYSTEM_PROMPT, user_prompt):
-                        yield chunk
-                except Exception as exc:
-                    self.logger.warning("GGUF failed (%s); falling back to extractive", exc)
-                    text = build_extractive_answer(safe_query, retrieved)
-                    yield from stream_answer_text(text)
-
-            return gguf_stream(), source_payload
-
-        # ── Mode: Ollama ──────────────────────────────────────────────────────
-        if _ollama_reachable():
-            self.logger.info("Using Ollama model %s", settings.llm_model_name)
-
-            def ollama_stream() -> Generator[str, None, None]:
-                try:
-                    import ollama  # lazy import — not installed on Streamlit Cloud
-                    stream = ollama.chat(
-                        model=settings.llm_model_name,
-                        messages=messages,
-                        stream=True,
-                        options={"temperature": 0, "num_predict": 512},
-                    )
-                    for chunk in stream:
-                        token = chunk.get("message", {}).get("content", "")
-                        if token:
-                            yield token
-                except Exception as exc:
-                    self.logger.warning("Ollama failed (%s); falling back to extractive", exc)
-                    text = build_extractive_answer(safe_query, retrieved)
-                    yield from stream_answer_text(text)
-
-            return ollama_stream(), source_payload
-
-        # ── Final fallback: extractive ────────────────────────────────────────
-        self.logger.info("No LLM available; using pure extractive answer")
-
-        def extractive_fallback() -> Generator[str, None, None]:
+            # fallback
             text = build_extractive_answer(safe_query, retrieved)
             yield from stream_answer_text(text)
 
-        return extractive_fallback(), source_payload
+        return stream(), sources
