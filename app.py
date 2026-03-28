@@ -46,78 +46,67 @@ with st.sidebar:
 
     st.divider()
 
-    # ── Answer Mode selector ──────────────────────────────────────────────────
     st.subheader("🤖 Answer Mode")
     mode = st.radio(
         "Choose how answers are generated:",
         options=[
             "Extractive (Grounded)",
-            "LangChain (Local LLM)",
             "Ollama (Local LLM)",
             "Local GGUF",
         ],
-        index=1,
+        index=0,
         help=(
-            "Extractive (Grounded): Uses pure retrieval and chunk citation, "
-            "no metadata LLM.\n\n"
-            "LangChain (Local LLM): Uses local Hugging Face model (FLAN-T5 Small) "
-            "for grounded RAG responses.\n\n"
-            "Ollama (Local LLM): Runs a local Ollama model (if available locally).\n\n"
-            "Local GGUF: Runs a quantized GGUF model file locally via llama-cpp-python."
+            "Extractive (Grounded): Uses Groq (llama3-8b) to generate fluent, "
+            "grounded answers from retrieved document chunks. Falls back to "
+            "pure extractive if GROQ_API_KEY is not set.\n\n"
+            "Ollama (Local LLM): Runs a local Ollama model — only works on "
+            "your own machine.\n\n"
+            "Local GGUF: Runs a quantized GGUF model file — only works locally "
+            "with llama-cpp-python installed."
         ),
     )
 
     if mode == "Extractive (Grounded)":
         if groq_key_set:
             st.info(
-                "🤖 **Groq LLM** will generate a fluent, grounded answer "
-                "using retrieved chunks from your document. "
-                "No information outside the document will be used.",
+                "🤖 **Groq LLM** (llama3-8b-8192) generates fluent answers "
+                "grounded strictly in the document. No external knowledge used.",
                 icon="✅",
             )
         else:
             st.info(
-                "📄 **Pure extractive mode** — relevant sentences are pulled "
-                "directly from the document without an LLM. "
-                "Add `GROQ_API_KEY` to Streamlit Secrets to enable LLM answers.",
+                "📄 **Pure extractive mode** — sentences pulled directly from "
+                "the document. Add `GROQ_API_KEY` to Secrets to enable LLM answers.",
                 icon="ℹ️",
             )
 
     elif mode == "Ollama (Local LLM)":
         st.info(
-            "🖥️ **Ollama (Local LLM)** — this mode is fully implemented and works when running the app locally on your machine.\n\n"
+            "🖥️ **Ollama** is fully implemented and works when running locally.\n\n"
             "**To use locally:**\n"
             "1. Install Ollama from [ollama.com](https://ollama.com)\n"
             "2. Run `ollama pull qwen2.5:0.5b-instruct`\n"
-            "3. Start the Ollama server using `ollama serve`\n"
-            "4. Launch the app with `streamlit run app.py`\n\n"
-            "⚠️ Due to Streamlit Cloud limitations (no support for local servers), this feature works only in a local environment. "
-            "For deployed versions, the app falls back to extractive or hosted LLM modes.",
+            "3. Run `ollama serve`\n"
+            "4. Launch with `streamlit run app.py`\n\n"
+            "⚠️ On Streamlit Cloud, Ollama cannot run — falls back to extractive.",
             icon="ℹ️",
         )
 
     elif mode == "Local GGUF":
         st.warning(
-            "📦 **Local GGUF** — this mode is implemented in the code "
-            "and works when you run the app locally on your own machine.\n\n"
+            "📦 **Local GGUF** works when running locally.\n\n"
             "**To use locally:**\n"
-            "1. Download a `.gguf` model file (e.g. TinyLlama Q4)\n"
-            "2. Place it at `models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf`\n"
+            "1. Download a `.gguf` model (e.g. TinyLlama Q4)\n"
+            "2. Place at `models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf`\n"
             "3. Install: `pip install llama-cpp-python`\n"
-            "4. Then start the app with `streamlit run app.py`\n\n"
-            "🚫 **Not supported on Streamlit Cloud** — `llama-cpp-python` "
-            "has no prebuilt wheels for this environment.",
+            "4. Launch with `streamlit run app.py`\n\n"
+            "🚫 **Not supported on Streamlit Cloud.**",
             icon="🚫",
         )
 
-    # Map UI choice → env flags consumed by the pipeline
+    # Map mode → env flags
     os.environ["USE_LLM"] = "false" if mode == "Extractive (Grounded)" else "true"
     os.environ["DISABLE_LOCAL_GGUF"] = "false" if mode == "Local GGUF" else "true"
-    # LangChain and Ollama mode share LLM = true, GGUF mode uses local file.
-    if mode == "LangChain (Local LLM)":
-        os.environ["DISABLE_LOCAL_GGUF"] = "true"
-    elif mode == "Ollama (Local LLM)":
-        os.environ["DISABLE_LOCAL_GGUF"] = "true"
 
     st.divider()
     st.write(f"**Active generator:** {generator_display_name()}")
